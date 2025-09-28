@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Sports News</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Sports Daily 📰</h1>
+        <button id="toggle-admin-btn">Admin Login/Post</button>
+    </header>
+
+    <main>
+        <section id="admin-panel" class="hidden">
+            <h2>Admin Posting Area</h2>
+            <form id="news-post-form">
+                <input type="text" id="post-title" placeholder="News Title" required>
+                <textarea id="post-content" placeholder="News Content" rows="5" required></textarea>
+                <input type="text" id="post-author" placeholder="Author Name" required>
+                <button type="submit">Publish News</button>
+            </form>
+            <p class="warning">
+                ⚠️ **Note:** This is a frontend-only demo. Posts are saved in your browser (LocalStorage) and are **not secure** or shared across devices.
+            </p>
+        </section>
+
+        <section id="news-feed">
+            <h2>Latest Sports Headlines</h2>
+            </section>
+    </main>
+
+    <footer>
+        &copy; 2025 Simple Sports News Demo
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+header {
+    background-color: #004d99; /* Dark Blue for a sports feel */
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+}
+
+#toggle-admin-btn {
+    background-color: #ff9900; /* Orange accent */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+main {
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* --- Admin Panel Styling --- */
+#admin-panel {
+    background-color: #e6e6e6;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border-left: 5px solid #004d99;
+}
+
+#admin-panel.hidden {
+    display: none;
+}
+
+#news-post-form input[type="text"],
+#news-post-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Ensures padding doesn't widen the element */
+}
+
+#news-post-form button {
+    background-color: #00a651; /* Green for publish */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.warning {
+    color: red;
+    font-style: italic;
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #ffe6e6;
+    border-radius: 4px;
+}
+
+/* --- News Feed Styling --- */
+.news-article {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.news-article h3 {
+    color: #004d99;
+    margin-top: 0;
+}
+
+.news-meta {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+footer {
+    text-align: center;
+    padding: 10px;
+    background-color: #333;
+    color: white;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const adminPanel = document.getElementById('admin-panel');
+    const toggleAdminBtn = document.getElementById('toggle-admin-btn');
+    const newsPostForm = document.getElementById('news-post-form');
+    const newsFeed = document.getElementById('news-feed');
+
+    // --- Admin Panel Toggle ---
+    toggleAdminBtn.addEventListener('click', () => {
+        // A super simple "login" (no real authentication)
+        const password = prompt("Enter Admin Password (Hint: 'kurd'):");
+        if (password === 'kurdsport') {
+            adminPanel.classList.toggle('hidden');
+            toggleAdminBtn.textContent = adminPanel.classList.contains('hidden') ? 'Admin Login/Post' : 'Hide Admin Panel';
+        } else if (password !== null) {
+            alert("Incorrect Password!");
+        }
+    });
+
+    // --- Load News from LocalStorage ---
+    let newsPosts = JSON.parse(localStorage.getItem('sportsNewsPosts')) || [];
+
+    // Function to render all news posts
+    function renderNews() {
+        // Clear existing news
+        newsFeed.innerHTML = '<h2>Latest Sports Headlines</h2>'; 
+        
+        if (newsPosts.length === 0) {
+            newsFeed.innerHTML += '<p>No news articles published yet. Be the first to post!</p>';
+            return;
+        }
+
+        // Sort by date (newest first)
+        newsPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        newsPosts.forEach(post => {
+            const article = document.createElement('article');
+            article.classList.add('news-article');
+            
+            const date = new Date(post.timestamp).toLocaleDateString();
+            const time = new Date(post.timestamp).toLocaleTimeString();
+
+            article.innerHTML = `
+                <h3>${post.title}</h3>
+                <p class="news-meta">By ${post.author} on ${date} at ${time}</p>
+                <p>${post.content}</p>
+            `;
+            newsFeed.appendChild(article);
+        });
+    }
+
+    // --- Handle News Post Submission ---
+    newsPostForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const title = document.getElementById('post-title').value;
+        const content = document.getElementById('post-content').value;
+        const author = document.getElementById('post-author').value;
+
+        const newPost = {
+            title,
+            content,
+            author,
+            timestamp: new Date().toISOString() // Store ISO date for sorting
+        };
+
+        // Add to array
+        newsPosts.push(newPost);
+        
+        // Save to LocalStorage
+        localStorage.setItem('sportsNewsPosts', JSON.stringify(newsPosts));
+
+        // Update the display
+        renderNews();
+        
+        // Reset the form
+        newsPostForm.reset();
+        alert('News successfully published!');
+    });
+
+    // Initial render when the page loads
+    renderNews();
+});
